@@ -94,13 +94,9 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 
 csv_stores = load_csv_records(csv_file)
 
-# Get All Custom Devices from ExtraHop
-eh_stores = {}
-eh_records = load_eh_records(eh)
+# Get All Custom Devices Stores from ExtraHop
+eh_stores = load_eh_records(eh)
 
-for record in eh_records:
-    # Only add records from EH that are actual stores.  This is done with "Store" in the description
-    if record["Description"] == "Store":
-        eh_stores.add(record)
+
 
 
