@@ -18,6 +18,7 @@ import sys
 import csv
 import time
 import ConfigParser
+from Ehop import Ehop
 
 ###############################################################
 ######## Variables                                     ########
@@ -52,9 +53,56 @@ logger.addHandler(logFile)
 logger.addHandler(logCon)
 logger.setLevel(logLevel)
 
+eh = Ehop(host=eh_host,apikey=api_key)
+
+def load_csv_data(filename):
+    f = open(filename)
+    data = csv.reader(f)
+    stores = {}
+    for row in data:
+        # It's not a good idea to load everything.  But, for now, let's just do it.
+        #TODO: Load only fields needed
+        stores.add(row[0])
+    return stores
+
 ###############################################################
 ######## Main Script                                    #######
 ###############################################################
+logger.info("Executing")
 
-conn = httplib.HTTPSConnection(eh_host,context=ssl._create_unverified_context())
+DOC = """
+This script is mean to take a CSV that was merged by GPC personnel and identify 
+MAC (Move/Add/Changes) to the Extrahop.
+
+Display Name:  {Mutable}
+StoreID: {Unmutable.  2nd and 3rd octets of IP}
+Tags:  {Mutable.  Always Changing}
+IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
+"""
+
+# Load relevant CSV data into a Set of Dicts
+logger.debug("Loading records from CSV")
+csv_stores = load_csv_data(csv_file)
+
+# Get All Custom Devices from ExtraHop
+eh_stores = {}
+logger.debug("Getting custom devices from Extrahop")
+eh_data = json.loads(eh.api_request("GET", "customdevices"))
+logger.debug("Loaded " + str(len(eh_data)) + " custom devices from Extrahop")
+for record in eh_data:
+    # Only add records from EH that are actual stores.  This is done with "Store" in the description
+    if record["Description"] == "Store":
+        eh_stores.add(record)
+
+logger.info("Added " + str(len(eh_stores)) + " filtered devices as stores from ExtraHop")
+
+
+
+
+
+
+    # Filter out only Stores as there could be custom devices for other things
+
+
+
 
