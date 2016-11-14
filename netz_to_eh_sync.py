@@ -17,17 +17,26 @@ import json
 import sys
 import csv
 import time
+import ConfigParser
 
 ###############################################################
 ######## Variables                                     ########
 ###############################################################
 
+vars_file = "vars.cfg"
 csv_file = 'test.csv'     # File used to build store data
 eh_host = '10.31.0.40'    # EH Host FQDN or IP
 api_key = '50c03c5c9889456488887ec3037cef88'
 logFileName = 'netz_to_eh_sync.log'  # Logging File for Auditing
 logLevel = logging.INFO   # Level of logging.  INFO, WARNING, ERROR, DEBUG, etc
 logApp = 'NETZSync'
+
+# Load Vars
+config = ConfigParser.ConfigParser
+config.read(vars_file)
+eh_host = config.get("DEFAULT","eh_host")
+csv_file = config.get("DEFAULT","datafile")
+api_key = config.get("DEFAULT", "api_key")
 
 ###############################################################
 ######## Functions and Setup                           ########
