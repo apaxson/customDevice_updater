@@ -14,9 +14,11 @@ class Ehop(object):
 
         #gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
-        conn = httplib.HTTPSConnection(self.host)
+        conn = httplib.HTTPSConnection(self.host,context=ssl._create_unverified_context())
         conn.request(method, "/api/v1/" + path, headers=headers, body=body)
 
         resp = conn.getresponse()
 
+        if resp.status >= 300:
+            raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
         return resp
