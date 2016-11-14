@@ -9,14 +9,10 @@
 ########   @EH_Firmware:  5.3.2                        ########
 ###############################################################
 
-import httplib
 import logging
-import urllib
-import ssl
 import json
 import sys
 import csv
-import time
 import ConfigParser
 from Ehop import Ehop
 
@@ -55,7 +51,8 @@ logger.setLevel(logLevel)
 
 eh = Ehop(host=eh_host,apikey=api_key)
 
-def load_csv_data(filename):
+def load_csv_records(filename):
+    logger.debug("Loading records from CSV")
     f = open(filename)
     data = csv.reader(f)
     stores = {}
@@ -63,8 +60,21 @@ def load_csv_data(filename):
         # It's not a good idea to load everything.  But, for now, let's just do it.
         #TODO: Load only fields needed
         stores.add(row[0])
+    logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     return stores
 
+def load_eh_records(extrahop):
+    loaded_stores = {}
+    logger.debug("Getting custom devices from Extrahop")
+    eh_data = json.loads(extrahop.api_request("GET", "customdevices"))
+    
+    for record in eh_data:
+        if record["description"] == "Store":
+            loaded_stores.add(record)
+    
+    logger.debug("Added " + str(len(loaded_stores)) + " filtered devices as stores from Extrahop")
+    return loaded_stores
+    
 ###############################################################
 ######## Main Script                                    #######
 ###############################################################
@@ -81,28 +91,16 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 """
 
 # Load relevant CSV data into a Set of Dicts
-logger.debug("Loading records from CSV")
-csv_stores = load_csv_data(csv_file)
+
+csv_stores = load_csv_records(csv_file)
 
 # Get All Custom Devices from ExtraHop
 eh_stores = {}
-logger.debug("Getting custom devices from Extrahop")
-eh_data = json.loads(eh.api_request("GET", "customdevices"))
-logger.debug("Loaded " + str(len(eh_data)) + " custom devices from Extrahop")
-for record in eh_data:
+eh_records = load_eh_records(eh)
+
+for record in eh_records:
     # Only add records from EH that are actual stores.  This is done with "Store" in the description
     if record["Description"] == "Store":
         eh_stores.add(record)
-
-logger.info("Added " + str(len(eh_stores)) + " filtered devices as stores from ExtraHop")
-
-
-
-
-
-
-    # Filter out only Stores as there could be custom devices for other things
-
-
 
 
