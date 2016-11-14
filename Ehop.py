@@ -8,6 +8,18 @@ class Ehop(object):
         self.apikey = apikey
         self.host = host
 
+    def getKeys():
+        global apikey
+        global host
+        with open('keys') as data_file:
+            data = json.load(data_file)
+            for key in data:
+                self.host = key
+                self.apikey = data[key]
+
+
+
+    def readKey('')
     def api_request(self, method, path, body=''):
         headers = {'Accept': 'application/json',
                    'Authorization': "ExtraHop apikey=%s" % self.apikey}
