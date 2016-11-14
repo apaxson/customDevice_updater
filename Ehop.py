@@ -14,9 +14,14 @@ class Ehop(object):
 
         #gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
-        conn = httplib.HTTPSConnection(self.host)
+        conn = httplib.HTTPSConnection(self.host,context=ssl._create_unverified_context())
         conn.request(method, "/api/v1/" + path, headers=headers, body=body)
 
         resp = conn.getresponse()
 
+<<<<<<< fc41b0098ea76219cf5d8a16754416fc76bb1bad
+=======
+        if resp.status >= 300:
+            raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
+>>>>>>> Removed SSL Cert check and changed return of api_request() to full response object.
         return resp
