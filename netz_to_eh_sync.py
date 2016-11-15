@@ -89,7 +89,7 @@ def load_csv_records(filename):
 def initStore(csv_store, extrahop):
     #create custom device
     body = '{ "author": "automation script", "description": "Store", "disabled": false, "extrahop_id": "'+csv_store["Unique_ID"]+'", "name": "'+csv_store["display_name"]+'" }'
-    customDevice, resp = json.loads(extrahop.api_request("POST", "customdevices", body=body))
+    resp = json.loads(extrahop.api_request("POST", "customdevices", body=body))
     location = resp.getheaders['location']
     customDeviceID = location[location.rfind('/')+1:]
     criterias = csv_store['Juniper'].split(',')
@@ -112,7 +112,7 @@ def validateCriteria(csv_store, eh_store, extrahop):
         if crit["ipaddr"] not in csv_criteria:
             crit_to_remove.append(crit["ipaddr"])
             logger.info("Removing criteria: " + crit["ipaddr"] + " for " + csv_store["display_name"])
-            read,resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
+            resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
             
     # Check if we need to add criteria to EH
     found = []
@@ -149,7 +149,7 @@ def validateTags(csv_store, eh_store, extrahop):
         body = {"assign":[], "unassign": []}
         # We have tags to remove/assign.  Make the proper EH calls
         # Get the Tag IDs from EH
-        eh_tags = extrahop.api_request("GET", "tags")
+        eh_tags = json.loads(extrahop.api_request("GET", "tags").read())
         if (len(tags_to_assign) > 0):
             # We need to assign tags. 
             tag_add_ids = []
@@ -170,11 +170,11 @@ def validateTags(csv_store, eh_store, extrahop):
 
     body["assign"] = tag_add_ids
     body["remove"] = tag_rm_ids
-    read,resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = str(body))
+    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = str(body))
     
     if resp.status >= 300:
         try:
-            resp_data = json.loads(read)
+            resp_data = json.loads(resp.read())
         except:
             resp_data = {"message":""}
         
@@ -213,14 +213,14 @@ def compare(csv_records, eh_records):
 def load_eh_records(extrahop):
     #load custom devices
     StoreCustomDevices = {}
-    tempCustom =  json.loads(extrahop.api_request("GET", "customdevices"))
+    tempCustom =  json.loads(extrahop.api_request("GET", "customdevices").read())
     for custom in tempCustom:
         if custom["description"] == "Store":
             StoreCustomDevices[custom["extrahop_id"]] = custom
 
     #load real devices
     StoreDevices = {}
-    tempDevices = json.loads(extrahop.api_request("GET", "devices?limit=10000&search_type=type&value=custom"))
+    tempDevices = json.loads(extrahop.api_request("GET", "devices?limit=10000&search_type=type&value=custom").read())
     for device in tempDevices:
         if device["extrahop_id"] in StoreCustomDevices:
             StoreDevices[device["extrahop_id"]] = device
@@ -243,11 +243,11 @@ def load_eh_records(extrahop):
 
         #grab criteria
         print id
-        criteria = json.loads(extrahop.api_request("GET", "customdevices/"+str(customID)+"/criteria"))
+        criteria = json.loads(extrahop.api_request("GET", "customdevices/"+str(customID)+"/criteria").read())
         loaded_stores[storeID]["criteria"] = criteria
 
         #grab tags
-        tags = json.loads(extrahop.api_request("GET", "devices/"+str(deviceID)+"/tags"))
+        tags = json.loads(extrahop.api_request("GET", "devices/"+str(deviceID)+"/tags").read())
         loaded_stores[storeID]["tags"] = tags
         loaded_stores[storeID]["custom_id"] = customID
 

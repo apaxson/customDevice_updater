@@ -1,6 +1,7 @@
 import httplib
 import ssl
 import sys
+import json
 
 class Ehop(object):
 
@@ -8,7 +9,7 @@ class Ehop(object):
         self.apikey = apikey
         self.host = host
 
-    def getKeys():
+    def getKeys(self):
         global apikey
         global host
         with open('keys') as data_file:
@@ -32,4 +33,5 @@ class Ehop(object):
 
         if resp.status >= 300:
             raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
-        return resp.read(), resp
+        return resp
+    
