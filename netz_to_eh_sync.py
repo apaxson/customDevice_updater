@@ -60,7 +60,7 @@ def extract_csv_tags(headers):
 
 def load_csv_records(filename):
     logger.debug("Loading records from CSV")
-    f = open(filename)
+    f = open(filename,'rU')
     data = csv.DictReader(f)
     all_tags = extract_csv_tags(data.fieldnames)
     #logger.debug("Found the following tags in file: " + str(all_tags))
@@ -71,15 +71,15 @@ def load_csv_records(filename):
         # Grab store ID to key on
         storeID = row['Unique_ID']
         # Check for RPM data.  If so, DisplayName + _num
-        displayName = "Store " + row["Store Number_Tag"]
-        if row["RPM_Tag"] > 0:
+        displayName = "Store " + row["Store Number_tag"]
+        if row["RPM Store Number"] != '':
             #RPM Store.  Append data
-            displayName += "_" + row["RPM_Tag"]
+            displayName += "_" + row["RPM Store Number"]
         row["display_name"] = displayName
         # Build dict of tags, with key "tags"
         tmptags = {}
         for tag in all_tags:
-            tmptags[tag] = row[tag + "_Tag"]
+            tmptags[tag] = row[tag + "_tag"]
         row["tags"] = tmptags
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
@@ -89,11 +89,11 @@ def load_csv_records(filename):
 def initStore(csv_store, extrahop):
     #create custom device
     body = '{ "author": "automation script", "description": "Store", "disabled": false, "extrahop_id": "'+csv_store["Unique_ID"]+'", "name": "'+csv_store["display_name"]+'" }'
-    resp = json.loads(extrahop.api_request("POST", "customdevices", body=body))
-    location = resp.getheaders['location']
+    resp = extrahop.api_request("POST", "customdevices", body=body)
+    location = resp.getheader('location')
     customDeviceID = location[location.rfind('/')+1:]
     criterias = csv_store['Juniper'].split(',')
-    logging.INFO("Creating custom device for " + csv_store["display_name"] + " with criteria " + str(criterias))
+    logger.info("Creating custom device for " + csv_store["display_name"] + " with criteria " + str(criterias))
     for criteria in criterias:
         cidr = criteria + "/24"
         body = '{ "custom_device_id": '+customDeviceID+', "ipaddr": "'+cidr+'"}'
@@ -193,14 +193,22 @@ def validateName(csv_store, eh_store, extrahop):
 
 
 
-def compare(csv_records, eh_records):
+def compare(csv_records, eh_records, custom):
+    logger.debug("Comparing CSV data to Extrahop data")
     for csv_storeID in csv_records:
         if csv_storeID in eh_records:
             validateName(csv_records[csv_storeID], eh_records[csv_storeID], eh)
             validateTags(csv_records[csv_storeID], eh_records[csv_storeID], eh)
             validateCriteria(csv_records[csv_storeID], eh_records[csv_storeID], eh)
         else:
-            initStore(csv_records[csv_storeID], eh)
+            # Not found in device list.  Let's check if the custom device is created
+            store_ids_custom_dev = []
+            for key in custom.keys():
+                temp_id = key.strip('~-')
+                store_ids_custom_dev.append(temp_id)
+                
+            if csv_storeID not in store_ids_custom_dev:  
+                initStore(csv_records[csv_storeID], eh)
 
 
 
@@ -228,9 +236,7 @@ def load_eh_records(extrahop):
     loaded_stores = {}
     logger.debug("Getting custom devices from Extrahop")
 
-    print StoreDevices
     for key in StoreDevices:
-        print StoreDevices[key]
         #Grab ID for later use
         deviceID = StoreDevices[key]["id"]
         customID = StoreCustomDevices[key]["id"]
@@ -242,7 +248,6 @@ def load_eh_records(extrahop):
         loaded_stores[storeID] = StoreDevices[key]
 
         #grab criteria
-        print id
         criteria = json.loads(extrahop.api_request("GET", "customdevices/"+str(customID)+"/criteria").read())
         loaded_stores[storeID]["criteria"] = criteria
 
@@ -252,7 +257,7 @@ def load_eh_records(extrahop):
         loaded_stores[storeID]["custom_id"] = customID
 
     logger.debug("Added " + str(len(loaded_stores)) + " filtered devices as stores from Extrahop")
-    return loaded_stores
+    return loaded_stores, StoreCustomDevices
 
 ###############################################################
 ######## Main Script                                    #######
@@ -270,11 +275,11 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 """
 
 # Get All Custom Devices Stores from ExtraHop
-eh_stores = load_eh_records(eh)
+eh_stores, custom_devs = load_eh_records(eh)
 
 # Load relevant CSV data into a Set of Dicts
 csv_stores = load_csv_records(csv_file)
 
 # Compare the data
-compare(csv_stores,eh_stores)
-
+compare(csv_stores,eh_stores, custom_devs)
+logger.info("Finished")
