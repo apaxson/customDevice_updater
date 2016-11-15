@@ -91,12 +91,13 @@ def load_csv_records(filename):
 
 def initStore(csv_store, extrahop):
     #create custom device
+    criterias = csv_store['Juniper'].split(',')
+    logger.info("Creating custom device for " + csv_store["display_name"] + " with criteria " + str(criterias))
     body = '{ "author": "automation script", "description": "Store", "disabled": false, "extrahop_id": "'+csv_store["Unique_ID"]+'", "name": "'+csv_store["display_name"]+'" }'
     resp = extrahop.api_request("POST", "customdevices", body=body)
     location = resp.getheader('location')
     customDeviceID = location[location.rfind('/')+1:]
-    criterias = csv_store['Juniper'].split(',')
-    logger.info("Creating custom device for " + csv_store["display_name"] + " with criteria " + str(criterias))
+    
     for criteria in criterias:
         cidr = criteria + "/24"
         body = '{ "custom_device_id": '+customDeviceID+', "ipaddr": "'+cidr+'"}'
