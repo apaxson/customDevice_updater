@@ -63,7 +63,7 @@ def load_csv_records(filename):
     f = open(filename)
     data = csv.DictReader(f)
     all_tags = extract_csv_tags(data.fieldnames)
-    logger.debug("Found the following tags in file: " + str(all_tags))
+    #logger.debug("Found the following tags in file: " + str(all_tags))
     stores = {}
     for row in data:
         # It's not a good idea to load everything.  But, for now, let's just do it.
@@ -81,6 +81,7 @@ def load_csv_records(filename):
         for tag in all_tags:
             tmptags[tag] = row[tag + "_Tag"]
         row["tags"] = tmptags
+        row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     return stores
@@ -126,17 +127,18 @@ def validateTags(csv_store, eh_store, extrahop):
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_add_ids.append(tag_e["id"])
+            logger.info("Adding Tags for Device " + csv_store["display_name"] + " " + str(tags_to_assign))
+            
         if (len(tags_to_remove) > 0):
             tag_rm_ids = []
             for tag_a in tags_to_remove:
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_rm_ids.append(tag_e["id"])
+            logger.info("Removing Tags for Device " + csv_store["display_name"] + " " + str(tags_to_remove))
 
     body["assign"] = tag_add_ids
     body["remove"] = tag_rm_ids
-    logger.info("Removing Tags for Device " + csv_store["display_name"] + " " + str(tags_to_remove))
-    logger.info("Adding Tags for Device " + csv_store["display_name"] + " " + str(tags_to_assign))
     read,resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = body)
     
     if resp.status >= 300:
