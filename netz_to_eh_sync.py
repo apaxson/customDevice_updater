@@ -203,6 +203,8 @@ def compare(csv_records, eh_records, custom):
         else:
             # Not found in device list.  Let's check if the custom device is created
             store_ids_custom_dev = []
+            # Currently, the extrahop-id from custom devices are padded.  
+            # Iterate through each one to clean them up, to be used as a key
             for key in custom.keys():
                 temp_id = key.strip('~-')
                 store_ids_custom_dev.append(temp_id)
