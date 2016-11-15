@@ -62,11 +62,26 @@ def load_csv_records(filename):
     logger.debug("Loading records from CSV")
     f = open(filename)
     data = csv.DictReader(f)
+    all_tags = extract_csv_tags(data.fieldnames)
+    logger.debug("Found the following tags in file: " + str(all_tags))
     stores = {}
     for row in data:
         # It's not a good idea to load everything.  But, for now, let's just do it.
         #TODO: Load only fields needed
-        stores.add(row[0])
+        # Grab store ID to key on
+        storeID = row['Unique_ID']
+        # Check for RPM data.  If so, DisplayName + _num
+        displayName = "Store " + row["Store Number_Tag"]
+        if row["RPM_Tag"] > 0:
+            #RPM Store.  Append data
+            displayName += "_" + row["RPM_Tag"]
+        row["display_name"] = displayName
+        # Build dict of tags, with key "tags"
+        tmptags = {}
+        for tag in all_tags:
+            tmptags[tag] = row[tag + "_Tag"]
+        row["tags"] = tmptags
+        stores[storeID] = row
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     return stores
 
