@@ -21,19 +21,16 @@ from Ehop import Ehop
 ###############################################################
 
 vars_file = "vars.cfg"
-csv_file = 'test.csv'     # File used to build store data
-eh_host = '10.31.0.40'    # EH Host FQDN or IP
-api_key = '50c03c5c9889456488887ec3037cef88'
-logFileName = 'netz_to_eh_sync.log'  # Logging File for Auditing
 logLevel = logging.INFO   # Level of logging.  INFO, WARNING, ERROR, DEBUG, etc
 logApp = 'NETZSync'
 
 # Load Vars
 config = ConfigParser.ConfigParser
 config.read(vars_file)
-eh_host = config.get("DEFAULT","eh_host")
-csv_file = config.get("DEFAULT","datafile")
-api_key = config.get("DEFAULT", "api_key")
+eh_host = config.get("DEFAULT","eh_host")          # Extrahop Host
+csv_file = config.get("DEFAULT","datafile")        # CSV File to load
+api_key = config.get("DEFAULT", "api_key")         # API Key for EH
+logFileName = config.get("DEFAULT","logFileName")  # LogFile 
 
 ###############################################################
 ######## Functions and Setup                           ########
@@ -70,8 +67,9 @@ def load_eh_records(extrahop):
     
     for record in eh_data:
         if record["description"] == "Store":
-            loaded_stores.add(record)
-    
+            storeid = int(record["extrahop_id"].strip("~-"))
+            loaded_stores[storeid] = record
+            
     logger.debug("Added " + str(len(loaded_stores)) + " filtered devices as stores from Extrahop")
     return loaded_stores
     
@@ -91,12 +89,15 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 """
 
 # Load relevant CSV data into a Set of Dicts
-
 csv_stores = load_csv_records(csv_file)
 
 # Get All Custom Devices Stores from ExtraHop
 eh_stores = load_eh_records(eh)
 
-
+# Load Extrahop device from CSV
+for store in csv_stores:
+    id = store['Unique_ID']
+    # Access the store in EH from CSV
+    eh_store = eh_stores['extrahop_id']
 
 
