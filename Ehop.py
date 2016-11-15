@@ -32,4 +32,4 @@ class Ehop(object):
 
         if resp.status >= 300:
             raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
-        return resp.read()
+        return resp.read(), resp
