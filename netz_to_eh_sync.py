@@ -87,6 +87,15 @@ def load_csv_records(filename):
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
+    uniqueCounter = {}
+    for key in stores:
+        uniqueCounter[stores[key]['display_name']] = -1
+
+    for key in stores:
+        uniqueCounter[stores[key]['display_name']] = uniqueCounter[stores[key]['display_name']] + 1
+        if uniqueCounter[stores[key]['display_name']] > 0:
+            stores[key]['display_name'] = stores[key]['display_name'] + "_" + str(uniqueCounter[stores[key]['display_name']])
+
     return stores
 
 def initStore(csv_store, extrahop):
@@ -97,7 +106,7 @@ def initStore(csv_store, extrahop):
     resp = extrahop.api_request("POST", "customdevices", body=body)
     location = resp.getheader('location')
     customDeviceID = location[location.rfind('/')+1:]
-    
+
     for criteria in criterias:
         cidr = criteria + "/24"
         body = '{ "custom_device_id": '+customDeviceID+', "ipaddr": "'+cidr+'"}'
@@ -117,25 +126,25 @@ def validateCriteria(csv_store, eh_store, extrahop):
             crit_to_remove.append(crit["ipaddr"])
             logger.info("Removing criteria: " + crit["ipaddr"] + " for " + csv_store["display_name"])
             resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
-            
+
     # Check if we need to add criteria to EH
     found = []
     for crit_csv in csv_criteria:
         for crit_eh in eh_criteria:
             if crit_csv == crit_eh["ipaddr"]:
                 found.append(crit_eh["ipaddr"])
-                
+
     for crit in csv_criteria:
         if crit not in found:
             logger.info("Adding criteria: " + crit + " for " + csv_store["display_name"])
             body = {"custom_device_id":eh_store["custom_id"],
                     "ipaddr": crit}
             extrahop.api_request("POST","customdevices/" + str(eh_store["custom_id"] + "/criteria",body=body))
-            
-    
-    
+
+
+
     # We've got our criteria to change.
-    
+
 def validateTags(csv_store, eh_store, extrahop):
     # First, check if device tag exists in eh device.
     tags_to_assign = []
@@ -143,28 +152,28 @@ def validateTags(csv_store, eh_store, extrahop):
     for tag in csv_store["tags"]:
         if tag not in eh_store["tags"]:
             tags_to_assign.append(tag)
-    
+
     # Next, check if if we need to remove tags
     for tag in eh_store["tags"]:
         if tag not in csv_store["tags"]:
             tags_to_remove.append(tag)
-    
+
     if (len(tags_to_assign) > 0) or (len(tags_to_remove) > 0):
         body = {"assign":[], "unassign": []}
         # We have tags to remove/assign.  Make the proper EH calls
         # Get the Tag IDs from EH
         eh_tags = json.loads(extrahop.api_request("GET", "tags").read())
         if (len(tags_to_assign) > 0):
-            # We need to assign tags. 
+            # We need to assign tags.
             tag_add_ids = []
             for tag_a in tags_to_assign:
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_add_ids.append(tag_e["id"])
             logger.info("Adding Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_assign))
-            
+
         if (len(tags_to_remove) > 0):
-            # We need to remove tags.  
+            # We need to remove tags.
             tag_rm_ids = []
             for tag_a in tags_to_remove:
                 for tag_e in eh_tags:
@@ -175,15 +184,15 @@ def validateTags(csv_store, eh_store, extrahop):
     body["assign"] = tag_add_ids
     body["remove"] = tag_rm_ids
     resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = str(body))
-    
+
     if resp.status >= 300:
         try:
             resp_data = json.loads(resp.read())
         except:
             resp_data = {"message":""}
-        
+
         logger.error("Unable to change tags for " + csv_store["display_name"] + " " + resp_data["message"])
-            
+
 def validateName(csv_store, eh_store, extrahop):
     if csv_store['display_name'] == eh_store['custom_name']:
         #sweet.. don't do shit
@@ -207,13 +216,13 @@ def compare(csv_records, eh_records, custom):
         else:
             # Not found in device list.  Let's check if the custom device is created
             store_ids_custom_dev = []
-            # Currently, the extrahop-id from custom devices are padded.  
+            # Currently, the extrahop-id from custom devices are padded.
             # Iterate through each one to clean them up, to be used as a key
             for key in custom.keys():
                 temp_id = key.strip('~-')
                 store_ids_custom_dev.append(temp_id)
-                
-            if csv_storeID not in store_ids_custom_dev:  
+
+            if csv_storeID not in store_ids_custom_dev:
                 initStore(csv_records[csv_storeID], eh)
 
 
