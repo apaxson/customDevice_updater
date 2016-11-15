@@ -10,6 +10,7 @@
 ###############################################################
 
 import logging
+import re
 import json
 import sys
 import csv
@@ -48,10 +49,19 @@ logger.setLevel(logLevel)
 
 eh = Ehop(host=eh_host,apikey=api_key)
 
+def extract_csv_tags(headers):
+    #Use this function to validate or create tag definitions in EH
+    tags = []
+    for header in headers:
+        match = re.search('([\w\s]+)_[Tt]ag$',header)
+        if match is not None:
+            tags.append(match.group(1))
+    return tags
+
 def load_csv_records(filename):
     logger.debug("Loading records from CSV")
     f = open(filename)
-    data = csv.reader(f)
+    data = csv.DictReader(f)
     stores = {}
     for row in data:
         # It's not a good idea to load everything.  But, for now, let's just do it.
