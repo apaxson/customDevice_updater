@@ -19,7 +19,6 @@ class Ehop(object):
 
 
 
-    def readKey('')
     def api_request(self, method, path, body=''):
         headers = {'Accept': 'application/json',
                    'Authorization': "ExtraHop apikey=%s" % self.apikey}
@@ -33,4 +32,4 @@ class Ehop(object):
 
         if resp.status >= 300:
             raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
-        return resp
+        return resp.read()
