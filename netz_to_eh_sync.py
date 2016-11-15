@@ -100,9 +100,37 @@ def initStore(csv_store, extrahop):
 
 
     #add criteria
-def validateCritera(csv_store, eh_store):
-    pass
+def validateCriteria(csv_store, eh_store, extrahop):
+    csv_criteria = csv_store["criteria"]
+    eh_criteria = eh_store["criteria"]
+    crit_to_assign = []
+    crit_to_remove = []
 
+    # Check if we need to remove criteria from EH
+    for crit in eh_criteria:
+        if crit["ipaddr"] not in csv_criteria:
+            crit_to_remove.append(crit["ipaddr"])
+            logger.info("Removing criteria: " + crit["ipaddr"] + " to " + csv_store["display_name"])
+            read,resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
+            
+    # Check if we need to add criteria to EH
+    found = []
+    for crit_csv in csv_criteria:
+        for crit_eh in eh_criteria:
+            if crit_csv == crit_eh["ipaddr"]:
+                found.append(crit_eh["ipaddr"])
+                
+    for crit in csv_criteria:
+        if crit not in found:
+            logger.info("Adding criteria: " + crit + " to " + csv_store["display_name"])
+            body = {"custom_device_id":eh_store["custom_id"],
+                    "ipaddr": crit}
+            extrahop.api_request("POST","customdevices/" + str(eh_store["custom_id"] + "/criteria",body=body))
+            
+    
+    
+    # We've got our criteria to change.
+    
 def validateTags(csv_store, eh_store, extrahop):
     # First, check if device tag exists in eh device.
     tags_to_assign = []
@@ -154,6 +182,7 @@ def validateTags(csv_store, eh_store, extrahop):
 def validateName(csv_store, eh_store, extrahop):
     if csv_store['display_name'] == eh_store['custom_name']:
         #sweet.. don't do shit
+        pass
     else:
         #damnit....
         body = '{ "custom_name": "'+csv_store['display_name']+'", "custom_type": ""}'
@@ -167,7 +196,7 @@ def compare(csv_records, eh_records):
         if csv_storeID in eh_records:
             validateName(csv_records[csv_storeID], eh_records[csv_storeID], eh)
             validateTags(csv_records[csv_storeID], eh_records[csv_storeID], eh)
-            validateCriteria()
+            validateCriteria(csv_records[csv_storeID], eh_records[csv_storeID], eh)
         else:
             initStore(csv_records[csv_storeID], eh)
 
@@ -218,6 +247,7 @@ def load_eh_records(extrahop):
         #grab tags
         tags = json.loads(extrahop.api_request("GET", "devices/"+str(deviceID)+"/tags"))
         loaded_stores[storeID]["tags"] = tags
+        loaded_stores[storeID]["custom_id"] = customID
 
     logger.debug("Added " + str(len(loaded_stores)) + " filtered devices as stores from Extrahop")
     return loaded_stores
@@ -239,13 +269,10 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 
 # Get All Custom Devices Stores from ExtraHop
 eh_stores = load_eh_records(eh)
+
 # Load relevant CSV data into a Set of Dicts
 csv_stores = load_csv_records(csv_file)
-compare
 
+# Compare the data
+compare(csv_stores,eh_stores)
 
-# Load Extrahop device from CSV
-for store in csv_stores:
-    id = store['Unique_ID']
-    # Access the store in EH from CSV
-    eh_store = eh_stores['extrahop_id']
