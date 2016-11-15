@@ -85,6 +85,50 @@ def load_csv_records(filename):
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     return stores
 
+def initStore(csv_store):
+    #create custom device
+    body = '{ "author": "automation script", "description": "Store", "disabled": false, "extrahop_id": "'+csv_store["Unique_ID"]+'", "name": "'+csv_store["display_name"]+'" }'
+    customDevice, resp = json.loads(extrahop.api_request("POST", "customdevices", body=body))
+    location = resp.getheaders['location']
+    customDeviceID = location[location.rfind('/')+1:]
+    criterias = csv_store['Juniper'].split(',')
+    for criteria in criterias:
+        cidr = criteria + "/24"
+        body = '{ "custom_device_id": '+customDeviceID+', "ipaddr": "'+cidr+'"}'
+        extrahop.api_request("POST", "customdevices/"+customDeviceID+"/criteria", body=body)
+
+
+    #add criteria
+def validateCritera(csv_store, eh_store):
+def validateTags(csv_store, eh_store):
+
+def validateName(csv_store, eh_store):
+    if csv_store['display_name'] == eh_store['custom_name']:
+        #sweet.. don't do shit
+    else:
+        #damnit....
+        body = '{ "custom_name": "'+csv_store['display_name']+'", "custom_type": ""}'
+        extrahop.api_request("PATCH", "devices/"+eh_store['extrahop_id'], body=body)
+
+
+
+
+def compare(csv_records, eh_records):
+    for csv_storeID in csv_records:
+        if csv_storeID in eh_records:
+            validateTags()
+            validateCriteria()
+        else:
+            initStore(csv_records[csv_storeID])
+
+
+
+
+
+
+
+
+
 def load_eh_records(extrahop):
     #load custom devices
     StoreCustomDevices = {}
@@ -146,7 +190,8 @@ IPs:  {Mutable, but won't change, as this will conflict with StoreID (unmutable)
 # Get All Custom Devices Stores from ExtraHop
 eh_stores = load_eh_records(eh)
 # Load relevant CSV data into a Set of Dicts
-#csv_stores = load_csv_records(csv_file)
+csv_stores = load_csv_records(csv_file)
+compare
 
 
 # Load Extrahop device from CSV
