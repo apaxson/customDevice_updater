@@ -99,21 +99,16 @@ def load_eh_records(extrahop):
         storeID = StoreDevices[key]["extrahop_id"].strip("~-")
 
         #add
-        loaded_stores[key] = StoreDevices[key]
+        loaded_stores[storeID] = StoreDevices[key]
 
         #grab criteria
         print id
         criteria = json.loads(extrahop.api_request("GET", "customdevices/"+str(customID)+"/criteria"))
-        loaded_stores[key]["criteria"] = criteria
+        loaded_stores[storeID]["criteria"] = criteria
 
         #grab tags
         tags = json.loads(extrahop.api_request("GET", "devices/"+str(deviceID)+"/tags"))
-        loaded_stores[key]["tags"] = tags
-
-
-
-
-
+        loaded_stores[storeID]["tags"] = tags
 
     logger.debug("Added " + str(len(loaded_stores)) + " filtered devices as stores from Extrahop")
     return loaded_stores
