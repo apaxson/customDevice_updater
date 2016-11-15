@@ -58,6 +58,7 @@ def extract_csv_tags(headers):
         match = re.search('([\w\s]+)_[Tt]ag$',header)
         if match is not None:
             tags.append(match.group(1))
+    logger.debug("Found the following tags from netz file: " + str(tags))
     return tags
 
 def load_csv_records(filename):
