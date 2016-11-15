@@ -22,7 +22,7 @@ from Ehop import Ehop
 ###############################################################
 
 vars_file = "vars.cfg"
-logLevel = logging.INFO   # Level of logging.  INFO, WARNING, ERROR, DEBUG, etc
+logLevel = logging.DEBUG   # Level of logging.  INFO, WARNING, ERROR, DEBUG, etc
 logApp = 'NETZSync'
 
 # Load Vars
@@ -93,6 +93,7 @@ def initStore(csv_store, extrahop):
     location = resp.getheaders['location']
     customDeviceID = location[location.rfind('/')+1:]
     criterias = csv_store['Juniper'].split(',')
+    logging.INFO("Creating custom device for " + csv_store["display_name"] + " with criteria " + str(criterias))
     for criteria in criterias:
         cidr = criteria + "/24"
         body = '{ "custom_device_id": '+customDeviceID+', "ipaddr": "'+cidr+'"}'
@@ -110,7 +111,7 @@ def validateCriteria(csv_store, eh_store, extrahop):
     for crit in eh_criteria:
         if crit["ipaddr"] not in csv_criteria:
             crit_to_remove.append(crit["ipaddr"])
-            logger.info("Removing criteria: " + crit["ipaddr"] + " to " + csv_store["display_name"])
+            logger.info("Removing criteria: " + crit["ipaddr"] + " for " + csv_store["display_name"])
             read,resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
             
     # Check if we need to add criteria to EH
@@ -122,7 +123,7 @@ def validateCriteria(csv_store, eh_store, extrahop):
                 
     for crit in csv_criteria:
         if crit not in found:
-            logger.info("Adding criteria: " + crit + " to " + csv_store["display_name"])
+            logger.info("Adding criteria: " + crit + " for " + csv_store["display_name"])
             body = {"custom_device_id":eh_store["custom_id"],
                     "ipaddr": crit}
             extrahop.api_request("POST","customdevices/" + str(eh_store["custom_id"] + "/criteria",body=body))
@@ -156,7 +157,7 @@ def validateTags(csv_store, eh_store, extrahop):
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_add_ids.append(tag_e["id"])
-            logger.info("Adding Tags for Device " + csv_store["display_name"] + " " + str(tags_to_assign))
+            logger.info("Adding Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_assign))
             
         if (len(tags_to_remove) > 0):
             # We need to remove tags.  
@@ -165,7 +166,7 @@ def validateTags(csv_store, eh_store, extrahop):
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_rm_ids.append(tag_e["id"])
-            logger.info("Removing Tags for Device " + csv_store["display_name"] + " " + str(tags_to_remove))
+            logger.info("Removing Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_remove))
 
     body["assign"] = tag_add_ids
     body["remove"] = tag_rm_ids
@@ -185,6 +186,7 @@ def validateName(csv_store, eh_store, extrahop):
         pass
     else:
         #damnit....
+        logger.info("Updating name from '" + eh_store['custom_name'] + "' to '" + csv_store['display_name'] + "'")
         body = '{ "custom_name": "'+csv_store['display_name']+'", "custom_type": ""}'
         extrahop.api_request("PATCH", "devices/"+eh_store['extrahop_id'], body=body)
 
