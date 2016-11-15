@@ -6,7 +6,7 @@
 ########     Used to sync data from NETZ to Extrahop   ########
 ########     in order to get up-to-date stores and     ########
 ########     metadata from CSV                         ########
-########   @EH_Firmware:  5.3.2                        ########
+########   @EH_Firmware:  6.0.2                        ########
 ###############################################################
 
 import logging
@@ -85,7 +85,7 @@ def load_csv_records(filename):
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     return stores
 
-def initStore(csv_store):
+def initStore(csv_store, extrahop):
     #create custom device
     body = '{ "author": "automation script", "description": "Store", "disabled": false, "extrahop_id": "'+csv_store["Unique_ID"]+'", "name": "'+csv_store["display_name"]+'" }'
     customDevice, resp = json.loads(extrahop.api_request("POST", "customdevices", body=body))
@@ -100,9 +100,54 @@ def initStore(csv_store):
 
     #add criteria
 def validateCritera(csv_store, eh_store):
-def validateTags(csv_store, eh_store):
+    pass
 
-def validateName(csv_store, eh_store):
+def validateTags(csv_store, eh_store, extrahop):
+    # First, check if device tag exists in eh device.
+    tags_to_assign = []
+    tags_to_remove = []
+    for tag in csv_store["tags"]:
+        if tag not in eh_store["tags"]:
+            tags_to_assign.append(tag)
+    
+    # Next, check if if we need to remove tags
+    for tag in eh_store["tags"]:
+        if tag not in csv_store["tags"]:
+            tags_to_remove.append(tag)
+    
+    if (len(tags_to_assign) > 0) or (len(tags_to_remove) > 0):
+        body = {"assign":[], "unassign": []}
+        # We have tags to remove/assign.  Make the proper EH calls
+        if (len(tags_to_assign) > 0):
+            # We need to assign tags.  Get the Tag IDs from EH
+            eh_tags = extrahop.api_request("GET", "tags")
+            tag_add_ids = []
+            for tag_a in tags_to_assign:
+                for tag_e in eh_tags:
+                    if tag_a == tag_e["name"]:
+                        tag_add_ids.append(tag_e["id"])
+        if (len(tags_to_remove) > 0):
+            tag_rm_ids = []
+            for tag_a in tags_to_remove:
+                for tag_e in eh_tags:
+                    if tag_a == tag_e["name"]:
+                        tag_rm_ids.append(tag_e["id"])
+
+    body["assign"] = tag_add_ids
+    body["remove"] = tag_rm_ids
+    logger.info("Removing Tags for Device " + csv_store["display_name"] + " " + str(tags_to_remove))
+    logger.info("Adding Tags for Device " + csv_store["display_name"] + " " + str(tags_to_assign))
+    read,resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = body)
+    
+    if resp.status >= 300:
+        try:
+            resp_data = json.loads(read)
+        except:
+            resp_data = {"message":""}
+        
+        logger.error("Unable to change tags for " + csv_store["display_name"] + " " + resp_data["message"])
+            
+def validateName(csv_store, eh_store, extrahop):
     if csv_store['display_name'] == eh_store['custom_name']:
         #sweet.. don't do shit
     else:
@@ -116,10 +161,11 @@ def validateName(csv_store, eh_store):
 def compare(csv_records, eh_records):
     for csv_storeID in csv_records:
         if csv_storeID in eh_records:
-            validateTags()
+            validateName(csv_records[csv_storeID], eh_records[csv_storeID], eh)
+            validateTags(csv_records[csv_storeID], eh_records[csv_storeID], eh)
             validateCriteria()
         else:
-            initStore(csv_records[csv_storeID])
+            initStore(csv_records[csv_storeID], eh)
 
 
 
