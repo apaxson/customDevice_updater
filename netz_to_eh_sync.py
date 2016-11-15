@@ -119,9 +119,10 @@ def validateTags(csv_store, eh_store, extrahop):
     if (len(tags_to_assign) > 0) or (len(tags_to_remove) > 0):
         body = {"assign":[], "unassign": []}
         # We have tags to remove/assign.  Make the proper EH calls
+        # Get the Tag IDs from EH
+        eh_tags = extrahop.api_request("GET", "tags")
         if (len(tags_to_assign) > 0):
-            # We need to assign tags.  Get the Tag IDs from EH
-            eh_tags = extrahop.api_request("GET", "tags")
+            # We need to assign tags. 
             tag_add_ids = []
             for tag_a in tags_to_assign:
                 for tag_e in eh_tags:
@@ -130,6 +131,7 @@ def validateTags(csv_store, eh_store, extrahop):
             logger.info("Adding Tags for Device " + csv_store["display_name"] + " " + str(tags_to_assign))
             
         if (len(tags_to_remove) > 0):
+            # We need to remove tags.  
             tag_rm_ids = []
             for tag_a in tags_to_remove:
                 for tag_e in eh_tags:
@@ -139,7 +141,7 @@ def validateTags(csv_store, eh_store, extrahop):
 
     body["assign"] = tag_add_ids
     body["remove"] = tag_rm_ids
-    read,resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = body)
+    read,resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = str(body))
     
     if resp.status >= 300:
         try:
