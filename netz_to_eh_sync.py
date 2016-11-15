@@ -16,6 +16,7 @@ import sys
 import csv
 import ConfigParser
 from Ehop import Ehop
+from logging.handlers import TimedRotatingFileHandler
 
 ###############################################################
 ######## Variables                                     ########
@@ -38,12 +39,13 @@ logFileName = config.get("DEFAULT","logFileName")  # LogFile
 ###############################################################
 
 logger = logging.getLogger(logApp)
-logFile = logging.FileHandler(logFileName)
+fileHandler = TimedRotatingFileHandler(logFileName,when='d',interval=1,backupCount=10)
+#logFile = logging.FileHandler(logFileName)
 logCon = logging.StreamHandler(sys.stdout)
 logFormat = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-logFile.setFormatter(logFormat)
+fileHandler.setFormatter(logFormat)
 logCon.setFormatter(logFormat)
-logger.addHandler(logFile)
+logger.addHandler(fileHandler)
 logger.addHandler(logCon)
 logger.setLevel(logLevel)
 
