@@ -235,6 +235,7 @@ def compare(csv_records, eh_records, custom):
 
 def load_eh_records(extrahop):
     #load custom devices
+    logger.debug("Getting custom device definitions from Extrahop")
     StoreCustomDevices = {}
     tempCustom =  json.loads(extrahop.api_request("GET", "customdevices").read())
     for custom in tempCustom:
@@ -242,6 +243,7 @@ def load_eh_records(extrahop):
             StoreCustomDevices[custom["extrahop_id"]] = custom
 
     #load real devices
+    logger.debug("Getting discovered device data from Extrahop")
     StoreDevices = {}
     tempDevices = json.loads(extrahop.api_request("GET", "devices?limit=10000&search_type=type&value=custom").read())
     for device in tempDevices:
@@ -249,7 +251,6 @@ def load_eh_records(extrahop):
             StoreDevices[device["extrahop_id"]] = device
 
     loaded_stores = {}
-    logger.debug("Getting custom devices from Extrahop")
 
     for key in StoreDevices:
         #Grab ID for later use
