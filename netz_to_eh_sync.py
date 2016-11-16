@@ -68,9 +68,10 @@ def load_csv_records(filename):
     all_tags = extract_csv_tags(data.fieldnames)
     #logger.debug("Found the following tags in file: " + str(all_tags))
     stores = {}
+    
+    # Cycle through the rows of data in CSV and store them
     for row in data:
-        # It's not a good idea to load everything.  But, for now, let's just do it.
-        #TODO: Load only fields needed
+
         # Grab store ID to key on
         storeID = row['Unique_ID']
         # Check for RPM data.  If so, DisplayName + _num
@@ -87,11 +88,13 @@ def load_csv_records(filename):
         row["tags"] = tmptags
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
+        logger.debug("CSV Row Data for stores{} is: " + str(stores))
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
+    
+    # Detect and rename duplicate store names courtesy of Tony H's awesomeness.
     uniqueCounter = {}
     for key in stores:
-        uniqueCounter[stores[key]['display_name']] = -1
-
+        uniqueCounter[stores[key]['display_name']] = -1  
     for key in stores:
         uniqueCounter[stores[key]['display_name']] = uniqueCounter[stores[key]['display_name']] + 1
         if uniqueCounter[stores[key]['display_name']] > 0:
