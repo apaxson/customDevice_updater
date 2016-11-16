@@ -176,7 +176,7 @@ def validateTags(csv_store, eh_store, extrahop):
                 logger.debug("New tag found.  Adding '" + new_tag + "' to Extrahop")
                 tag_data = {"name": new_tag}
                 logger.debug("Tag Data: " + str(tag_data))
-                response = extrahop.api_request("POST","tags", body=str(tag_data))
+                response = extrahop.api_request("POST","tags", body=json.dumps(tag_data))
                 location = response.getheader("location")[1]
                 tag_id = location[location.rfind('/')+1:]
                 eh_tags.append({"name": new_tag, "id": tag_id})
