@@ -88,7 +88,6 @@ def load_csv_records(filename):
         row["tags"] = tmptags
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
-        logger.debug("CSV Row Data for stores{storeID} is: " + str(row))
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     
     # Detect and rename duplicate store names courtesy of Tony H's awesomeness.
@@ -152,10 +151,9 @@ def validateTags(csv_store, eh_store, extrahop):
     # First, check if device tag exists in eh device.
     tags_to_assign = []
     tags_to_remove = []
-    for tag in csv_store["tags"]:
-        for tag_entry in tag: 
-            if tag_entry not in eh_store["tags"]:
-                tags_to_assign.append(tag_entry)
+    for tag,value in csv_store["tags"].items():
+        if value not in eh_store["tags"]:
+            tags_to_assign.append(value)
 
     # Next, check if if we need to remove tags
     for tag in eh_store["tags"]:
@@ -171,7 +169,17 @@ def validateTags(csv_store, eh_store, extrahop):
         # Get the Tag IDs from EH
         logger.debug("Requesting all tags from EH to get Tag IDs")
         eh_tags = json.loads(extrahop.api_request("GET", "tags").read())
-        logger.debug("Tags received from EH are " + str(eh_tags))
+        # Ok.  If our tags to add are not included in eh_tags, we need to create them
+        # and pull the ID from the "location" header path.
+        for new_tag in tags_to_assign:
+            if new_tag not in eh_tags["name"]:
+                logger.debug("New tag found.  Adding '" + new_tag + "' to Extrahop")
+                body = {"name": new_tag}
+                response = extrahop.api_request("POST","tags", body=body)
+                location = response.getheader("location")[1]
+                tag_id = location[location.rfind('/')+1:]
+                eh_tags.append({"name": new_tag, "id": tag_id})
+                
         if (len(tags_to_assign) > 0):
             # We need to assign tags.
             for tag_a in tags_to_assign:
