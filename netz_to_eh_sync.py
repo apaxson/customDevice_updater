@@ -251,8 +251,10 @@ def load_eh_records(extrahop):
         if device["extrahop_id"] in StoreCustomDevices:
             StoreDevices[device["extrahop_id"]] = device
 
+    logger.debug("Received all devices from Extrahop")
     loaded_stores = {}
 
+    logger.debug("Getting criteria and tags from each device in Extrahop.  This may take some time...")
     for key in StoreDevices:
         #Grab ID for later use
         deviceID = StoreDevices[key]["id"]
