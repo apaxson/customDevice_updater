@@ -118,7 +118,6 @@ def initStore(csv_store, extrahop):
 def validateCriteria(csv_store, eh_store, extrahop):
     csv_criteria = csv_store["criteria"]
     eh_criteria = eh_store["criteria"]
-    crit_to_assign = []
     crit_to_remove = []
 
     # Check if we need to remove criteria from EH
@@ -126,7 +125,7 @@ def validateCriteria(csv_store, eh_store, extrahop):
         if crit["ipaddr"] not in csv_criteria:
             crit_to_remove.append(crit["ipaddr"])
             logger.info("Removing criteria: " + crit["ipaddr"] + " for " + csv_store["display_name"])
-            resp = extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
+            extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
 
     # Check if we need to add criteria to EH
     found = []
