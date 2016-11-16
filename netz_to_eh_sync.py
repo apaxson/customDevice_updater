@@ -82,7 +82,7 @@ def load_csv_records(filename):
         # Build dict of tags, with key "tags"
         tmptags = {}
         for tag in all_tags:
-            tmptags[tag] = row[tag + "_tag"]
+            tmptags[tag] = tag + ": " + row[tag + "_tag"]
         row["tags"] = tmptags
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
