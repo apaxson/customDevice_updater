@@ -172,7 +172,7 @@ def validateTags(csv_store, eh_store, extrahop):
         # Ok.  If our tags to add are not included in eh_tags, we need to create them
         # and pull the ID from the "location" header path.
         for new_tag in tags_to_assign:
-            if new_tag not in eh_tags["name"]:
+            if not any(d['name'] == new_tag for d in eh_tags):
                 logger.debug("New tag found.  Adding '" + new_tag + "' to Extrahop")
                 body = {"name": new_tag}
                 response = extrahop.api_request("POST","tags", body=body)
