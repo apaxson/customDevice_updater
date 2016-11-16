@@ -166,14 +166,16 @@ def validateTags(csv_store, eh_store, extrahop):
         params = {"assign":[], "unassign": []}
         # We have tags to remove/assign.  Make the proper EH calls
         # Get the Tag IDs from EH
+        logger.debug("Requesting all tags from EH to get Tag IDs")
         eh_tags = json.loads(extrahop.api_request("GET", "tags").read())
+        logger.debug("Tags received from EH are " + str(eh_tags))
         if (len(tags_to_assign) > 0):
             # We need to assign tags.
             for tag_a in tags_to_assign:
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_add_ids.append(tag_e["id"])
-            logger.info("Adding Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_assign))
+            logger.info("Adding Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_assign) + " with IDs " + str(tag_add_ids))
 
         if (len(tags_to_remove) > 0):
             # We need to remove tags.
@@ -181,8 +183,8 @@ def validateTags(csv_store, eh_store, extrahop):
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
                         tag_rm_ids.append(tag_e["id"])
-            logger.info("Removing Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_remove))
-
+            logger.info("Removing Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_remove) + " with IDs " + str(tag_rm_ids))
+    
     params["assign"] = tag_add_ids
     params["unassign"] = tag_rm_ids
     logger.debug("Tag request :: URL: POST devices/"+str(eh_store["id"]) + "/tags PARAMS: " + str(params))
