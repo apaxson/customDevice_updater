@@ -184,7 +184,7 @@ def validateTags(csv_store, eh_store, extrahop):
             logger.info("Removing Tags for Device " + csv_store["display_name"] + ": " + str(tags_to_remove))
 
     params["assign"] = tag_add_ids
-    params["remove"] = tag_rm_ids
+    params["unassign"] = tag_rm_ids
     logger.debug("Tag request :: URL: POST devices/"+str(eh_store["id"]) + "/tags PARAMS: " + str(params))
     resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = params)
 
