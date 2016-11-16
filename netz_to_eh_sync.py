@@ -158,6 +158,8 @@ def validateTags(csv_store, eh_store, extrahop):
         if tag not in csv_store["tags"]:
             tags_to_remove.append(tag)
 
+    tag_rm_ids = []
+    tag_add_ids = []
     if (len(tags_to_assign) > 0) or (len(tags_to_remove) > 0):
         body = {"assign":[], "unassign": []}
         # We have tags to remove/assign.  Make the proper EH calls
@@ -165,7 +167,6 @@ def validateTags(csv_store, eh_store, extrahop):
         eh_tags = json.loads(extrahop.api_request("GET", "tags").read())
         if (len(tags_to_assign) > 0):
             # We need to assign tags.
-            tag_add_ids = []
             for tag_a in tags_to_assign:
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
@@ -174,7 +175,6 @@ def validateTags(csv_store, eh_store, extrahop):
 
         if (len(tags_to_remove) > 0):
             # We need to remove tags.
-            tag_rm_ids = []
             for tag_a in tags_to_remove:
                 for tag_e in eh_tags:
                     if tag_a == tag_e["name"]:
