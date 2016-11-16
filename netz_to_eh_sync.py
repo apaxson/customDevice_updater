@@ -88,7 +88,7 @@ def load_csv_records(filename):
         row["tags"] = tmptags
         row["criteria"] = row["Juniper"].split("|")
         stores[storeID] = row
-        logger.debug("CSV Row Data for stores{} is: " + str(stores))
+        logger.debug("CSV Row Data for stores{storeID} is: " + str(row))
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     
     # Detect and rename duplicate store names courtesy of Tony H's awesomeness.
@@ -153,8 +153,9 @@ def validateTags(csv_store, eh_store, extrahop):
     tags_to_assign = []
     tags_to_remove = []
     for tag in csv_store["tags"]:
-        if tag not in eh_store["tags"]:
-            tags_to_assign.append(tag)
+        for tag_entry in tag: 
+            if tag_entry not in eh_store["tags"]:
+                tags_to_assign.append(tag_entry)
 
     # Next, check if if we need to remove tags
     for tag in eh_store["tags"]:
