@@ -184,7 +184,8 @@ def validateTags(csv_store, eh_store, extrahop):
 
     params["assign"] = tag_add_ids
     params["remove"] = tag_rm_ids
-    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = str(params))
+    logger.debug("Tag request :: URL: POST devices/"+str(eh_store["id"]) + "/tags PARAMS: " + str(params))
+    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = params)
 
     if resp.status >= 300:
         try:
