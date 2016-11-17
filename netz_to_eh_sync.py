@@ -158,7 +158,7 @@ def validateTags(csv_store, eh_store, extrahop):
 
     # Next, check if if we need to remove tags
     for tag in eh_store["tags"]:
-        if tag not in csv_store["tags"]:
+        if tag["name"] not in csv_store["tags"]:
             tags_to_remove.append(tag)
 
     tag_rm_ids = []
