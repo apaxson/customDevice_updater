@@ -179,6 +179,7 @@ def validateTags(csv_store, eh_store, extrahop):
                 response = extrahop.api_request("POST","tags", body=json.dumps(tag_data))
                 location = response.getheader("location")[1]
                 tag_id = location[location.rfind('/')+1:]
+                
                 eh_tags.append({"name": new_tag, "id": tag_id})
                 
         if (len(tags_to_assign) > 0):
@@ -200,7 +201,7 @@ def validateTags(csv_store, eh_store, extrahop):
     params["assign"] = tag_add_ids
     params["unassign"] = tag_rm_ids
     logger.debug("Tag request :: URL: POST devices/"+str(eh_store["id"]) + "/tags PARAMS: " + str(params))
-    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = params)
+    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = json.dumps(params))
 
     if resp.status >= 300:
         try:
