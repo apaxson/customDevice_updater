@@ -182,12 +182,19 @@ def validateTags(csv_store, eh_store, extrahop):
                 tag_data = {"name": new_tag}
                 logger.debug("Tag Data: " + str(tag_data))
                 response = extrahop.api_request("POST","tags", body=json.dumps(tag_data))
-                location = response.getheader("location")[1]
+                """location = response.getheader("location")[1]
                 
                 tag_id = location[location.rfind('/')+1:]
                 logger.debug("Location Header for new tag " + new_tag + " is " + tag_id + " from " + location + " using headers " + str(response.getheaders()))
                 
-                eh_tags.append({"name": new_tag, "id": tag_id})
+                eh_tags.append({"name": new_tag, "id": tag_id})"""
+                headers = response.getheaders()
+                
+                for header in headers:
+                    if header[0] == "location":
+                        tag_id = header[1][header[1].rfind('/')+1:]
+                        eh_tags.append({"name": new_tag, "id": tag_id})
+                logger.debug("Loading the following tags: " + str(eh_tags) + " into tag array")
                 
         if (len(tags_to_assign) > 0):
             # We need to assign tags.
