@@ -118,14 +118,14 @@ def initStore(csv_store, extrahop):
 
     #add criteria
 def validateCriteria(csv_store, eh_store, extrahop):
-    csv_criteria = csv_store["criteria"] + "/24"
+    csv_criteria = str(csv_store["criteria"]) + "/24"
     eh_criteria = eh_store["criteria"]
     crit_to_remove = []
 
     # Check if we need to remove criteria from EH
     for crit in eh_criteria:
         if crit["ipaddr"] not in csv_criteria:
-            logger.debug("Found criteria for store " + csv_store["display_name"] + ", but found " + str(eh_criteria) + " in Extrahop.")
+            logger.debug("Found " + csv_criteria + " for store " + csv_store["display_name"] + ", but found " + str(eh_criteria) + " in Extrahop.")
             crit_to_remove.append(crit["ipaddr"])
             logger.info("Removing criteria: " + crit["ipaddr"] + " for " + csv_store["display_name"])
             extrahop.api_request("DELETE", "customdevices/" + str(eh_store["id"]) + "/criteria/" + str(crit["id"]))
@@ -179,7 +179,9 @@ def validateTags(csv_store, eh_store, extrahop):
                 logger.debug("Tag Data: " + str(tag_data))
                 response = extrahop.api_request("POST","tags", body=json.dumps(tag_data))
                 location = response.getheader("location")[1]
+				
                 tag_id = location[location.rfind('/')+1:]
+				logger.debug("Location Header for new tag " + new_tag + " is " + tag_id + " from " + location + " using headers " + str(response.getheaders()))
                 
                 eh_tags.append({"name": new_tag, "id": tag_id})
                 
@@ -231,7 +233,7 @@ def compare(csv_records, eh_records, custom):
         if csv_storeID in eh_records:
             validateName(csv_records[csv_storeID], eh_records[csv_storeID], eh)
             validateTags(csv_records[csv_storeID], eh_records[csv_storeID], eh)
-            validateCriteria(csv_records[csv_storeID], eh_records[csv_storeID], eh)
+            #validateCriteria(csv_records[csv_storeID], eh_records[csv_storeID], eh)
         else:
             # Not found in device list.  Let's check if the custom device is created
             store_ids_custom_dev = []
