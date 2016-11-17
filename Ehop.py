@@ -35,7 +35,7 @@ class Ehop(object):
         if resp.status >= 300:
             raise ValueError('Non-200 status code from API request', resp.status, resp.reason, resp.read())
 
-        time.sleep(.15)
+        time.sleep(.05)
         """keepAlive = resp.getheader("keep-alive")
         if keepAlive is not None:
             max = keepAlive[1].split('=')[1]

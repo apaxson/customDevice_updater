@@ -190,7 +190,7 @@ def validateTags(csv_store, eh_store, extrahop):
                 for header in headers:
                     if header[0] == "location":
                         tag_id = header[1][header[1].rfind('/')+1:]
-                        eh_tags.append({"name": new_tag, "id": tag_id})
+                        eh_tags.append({"name": new_tag, "id": int(tag_id)})
                 logger.debug("Loading the following tags: " + str(eh_tags) + " into tag array")
                 
         if (len(tags_to_assign) > 0):
@@ -212,7 +212,7 @@ def validateTags(csv_store, eh_store, extrahop):
     params["assign"] = tag_add_ids
     params["unassign"] = tag_rm_ids
     logger.debug("Tag request :: URL: POST devices/"+str(eh_store["id"]) + "/tags PARAMS: " + str(params))
-    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = json.dumps(params))
+    resp = extrahop.api_request("POST","devices/" + str(eh_store["id"]) + "/tags", body = json.JSONEncoder().encode(params))
 
     if resp.status >= 300:
         try:
@@ -227,10 +227,11 @@ def validateName(csv_store, eh_store, extrahop):
         #sweet.. don't do shit
         pass
     else:
-        #damnit....
-        logger.info("Updating name from '" + eh_store['custom_name'] + "' to '" + csv_store['display_name'] + "'")
-        body = '{ "custom_name": "'+csv_store['display_name']+'", "custom_type": ""}'
-        extrahop.api_request("PATCH", "devices/"+eh_store['extrahop_id'], body=body)
+        #damnit...
+		logger.info("Updating name from '" + eh_store['custom_name'] + "' to '" + csv_store['display_name'] + "' using store ID: " + str(eh_store['extrahop_id']))
+		
+		params = {"custom_name": csv_store['display_name'], "custom_type": ""}
+		extrahop.api_request("PATCH", "devices/"+str(eh_store['id']), body=json.JSONEncoder().encode(params))
 
 
 
