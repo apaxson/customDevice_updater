@@ -118,11 +118,8 @@ def initStore(csv_store, extrahop):
 
     #add criteria
 def validateCriteria(csv_store, eh_store, extrahop):
-<<<<<<< HEAD
+
     csv_criteria = str(csv_store["criteria"]) + "/24"
-=======
-    csv_criteria = csv_store["criteria"]
->>>>>>> 119b8e77374a2798a18db1cd94a887c83a22528b
     eh_criteria = eh_store["criteria"]
     crit_to_remove = []
 
