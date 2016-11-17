@@ -86,7 +86,7 @@ def load_csv_records(filename):
             if row[tag+"_tag"] is not None:
                 tmptags[tag] = tag + ": " + row[tag + "_tag"]
         row["tags"] = tmptags
-        row["criteria"] = row["Juniper"].split("|")
+        row["criteria"] = row["Juniper"] + "/24"
         stores[storeID] = row
     logger.debug("Loaded " + str(len(stores)) + " records from " + filename)
     
@@ -118,7 +118,11 @@ def initStore(csv_store, extrahop):
 
     #add criteria
 def validateCriteria(csv_store, eh_store, extrahop):
+<<<<<<< HEAD
     csv_criteria = str(csv_store["criteria"]) + "/24"
+=======
+    csv_criteria = csv_store["criteria"]
+>>>>>>> 119b8e77374a2798a18db1cd94a887c83a22528b
     eh_criteria = eh_store["criteria"]
     crit_to_remove = []
 
